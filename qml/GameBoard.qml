@@ -33,6 +33,7 @@ Page {
     property bool running: false
     property int level: 0
     property int score: 0
+    property int nbRound: 0
 
     Keys.enabled: running
 
@@ -88,7 +89,7 @@ Page {
             enabled: boardGame.running
             anchors.fill: gameCanvas
             anchors.margins: 5
-
+            nbRound: boardGame.nbRound
             onSwipe: {
                 Tetris.onKeyHandler(action)
 
@@ -122,9 +123,6 @@ Page {
         anchors.centerIn: parent
         opacity: 0
         visible: false
-
-
-       // NumberAnimation { duration: 500 ;easing.type: Easing.SineCurve}
     }
 
 
@@ -141,18 +139,6 @@ Page {
         }
     }
 
-//    GameOver{
-//        id: gameOverOverlay
-
-//        anchors.centerIn: parent
-//        //anchors.horizontalCenter: parent.horizontalCenter
-//        visible: false
-
-//        onRestartClicked: {
-//            boardGame.init()
-//        }
-
-//    }
 
     HighScoresOverlay{
         id:gameOver
@@ -238,14 +224,6 @@ Page {
     states: [
         State {
             name: Config.STATE_START
-           // PropertyChanges { target: timer; interval:Config.TIMER_INTERVAL; explicit:true}
-            //PropertyChanges { target: boardGame; Keys.enabled: true }
-//            PropertyChanges { target: boardGame; score: 0 }
-//             PropertyChanges { target: boardGame; level: 0 }
-
-          //  StateChangeScript { script: soundStart.play() }
-
-
         },
 
         State {
@@ -265,9 +243,7 @@ Page {
             PropertyChanges { target: boardGame; running:false }
             PropertyChanges { target: gameOver; visible:true }
             StateChangeScript { script: {
-                //pageStack.push("qrc:/qml/scoring/HighScoresOverlay.qml", {score:boardGame.score, level:boardGame.level});
                  gameOver.checkHighScore(boardGame.score, boardGame.level)
-                    //Storage.saveHighScore(new Date().toLocaleString(), boardGame.score, boardGame.level)
                 }}
 
         },
@@ -275,17 +251,6 @@ Page {
             name: Config.STATE_PENDING_BOMB // ? any way to group properties ( almost same as STATE_PAUSE/GAME_OVER
             PropertyChanges { target: boardGame; running:false }
         },
-//        State {
-//            name: Config.STATE_FIRING_BOMB
-//            StateChangeScript { script:soundBombFired.play()}
-
-//        },
-
-//        State {
-//            name: Config.STATE_ROW_REMOVED
-//            StateChangeScript { script:  soundClearRow.play() }
-//        },
-
         State {
             name: Config.STATE_NEW_LEVEL
             //PropertyChanges { target: newLevelOverlay; visible:true; explicit:true}

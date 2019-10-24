@@ -76,7 +76,7 @@ function nextRound(){
 
 
     nbRound++
-
+    gameBoard.game.nbRound = nbRound
 
     //handle bomb component
     if (nbRound >1 && Math.floor(Math.random()*22)===1){

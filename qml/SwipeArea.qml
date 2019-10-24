@@ -4,12 +4,14 @@ import Qt.labs.settings 1.0
 import "../js/Configuration.js" as Config
 
 MouseArea {
+    id: root
     property point origin
     property real xStep: parent.width / settings.swipeRatio
     property real yStep: parent.height / settings.swipeRatio
     property int currentPos: 0
     property int currentYPos: 0
-    property bool onAir: false
+    property bool isMoving: false
+    property int nbRound: 0
     property var lastSwipeDownActionDate: Date.now()
     property var lastSwipeHorizontalActionDate: Date.now()
 
@@ -17,117 +19,75 @@ MouseArea {
     signal move(int x, int y)
     signal swipe(int action)
 
+    onNbRoundChanged: {
+        root.isMoving = false
+    }
+
 
     onPressed: {
-        drag.axis = Drag.XAndYAxis
+        drag.axis = Drag.None
         origin = Qt.point(mouse.x, mouse.y)
         currentPos = Math.round(mouse.x / xStep)
         currentYPos = Math.round(mouse.y / yStep)
-        onAir = true
-        console.log("ok pressed:" + currentYPos)
+        root.isMoving = true
     }
 
     onPositionChanged: {
-        if (!onAir) return
+        if (!root.isMoving) return
 
-        switch (drag.axis) {
-        case Drag.XAndYAxis:
+        //y move ?
+        var nbYSteps = Math.round(mouse.y / yStep)
+        if (nbYSteps > currentYPos){
+            drag.axis= Drag.YAxis
+            swipe(Config.KEY_STEP_DOWN)
+            lastSwipeDownActionDate = Date.now()
 
-            if (Math.abs(mouse.x - origin.x) > 16) {
-                drag.axis = Drag.XAxis
-                lastSwipeHorizontalActionDate = Date.now()
-            }
-            else if (Math.abs(mouse.y - origin.y) > 16) {
-                drag.axis = Drag.YAxis
-            }
-            break
-
-        case Drag.XAxis:
-
-            var nbSteps = Math.round(mouse.x / xStep)
-            if (nbSteps > currentPos)
-                swipe(Config.KEY_RIGHT)
-            else if (nbSteps < currentPos)
-                swipe(Config.KEY_LEFT)
-            currentPos = nbSteps
-
-
-            break
-        case Drag.YAxis:
-
-
-
-            if (mouse.y - origin.y < 0){
-                //disable key up
-//                if (lastSwipeUpActionDate + minActionInterval < Date.now() ) {
-//                    swipe(Config.KEY_UP)
-//                    lastSwipeUpActionDate = Date.now()
-//                }
-            }else{
-                var nbStepsY = Math.round(mouse.y / yStep)
-                if (nbStepsY > currentYPos) {
-                //protect from unintended down actions
-                //if (lastSwipeDownActionDate + minActionInterval < Date.now() ){
-                    console.log("kikou STEP DOWN")
-                    swipe(Config.KEY_STEP_DOWN)
-                    lastSwipeDownActionDate = Date.now()
-                    origin = Qt.point(mouse.x, mouse.y)
-
-                //}
-                }
-                currentYPos = nbStepsY
-            }
-
-
-            break
+            currentYPos = nbYSteps
+            return
         }
+
+
+
+        //x move ?
+        var nbSteps = Math.round(mouse.x / xStep)
+        if (nbSteps !== currentPos) {
+            drag.axis= Drag.XAxis
+            if (nbSteps > currentPos){
+                swipe(Config.KEY_RIGHT)
+            }else if (nbSteps < currentPos) {
+                swipe(Config.KEY_LEFT)
+            }
+        }
+        currentPos = nbSteps
+
+
+
+
     }
 
     onClicked: {
-
-        if (drag.axis===Drag.XAndYAxis){
+        if (drag.axis===Drag.None) {
             swipe(Config.KEY_UP)
         }
     }
 
     onReleased: {
-
-//        if (lastSwipeUpActionDate + minActionInterval >= Date.now() ) return
+        if (!root.isMoving) return;
+       //if (lastSwipeDownActionDate + minActionInterval >= Date.now() ) return
         var velocity
 
-        if (drag.axis===Drag.YAxis){
+        if (drag.axis===Drag.YAxis ){
 
             velocity = (mouse.y - origin.y) / (Date.now() - lastSwipeDownActionDate)
+            //console.log("velocity:" + velocity)
             if (velocity > 1.5){
                 swipe(Config.KEY_DOWN)
-                onAir = false
-                console.log("kikou bump")
                 lastSwipeDownActionDate = Date.now()
                 drag.axis = Drag.None
             }
 
-
-
-        }else if (drag.axis===Drag.XAxis){
-
-//            var delta = mouse.x - origin.x
-//            //var delta = Math.abs(mouse.x - origin.x)
-//            velocity = Math.abs(delta) / (Date.now() - lastSwipeHorizontalActionDate)
-//            //onsole.log("velocityX:" + velocity + " delta:" + delta + " time:" + (Date.now() - lastSwipeHorizontalActionDate))
-//            if (velocity > 1){
-
-//                if (delta>0){
-//                    swipe(Config.KEY_FARRIGHT)
-//                }else{
-//                    swipe(Config.KEY_FARLEFT)
-//                }
-
-
-//                //lastSwipeHorizontalActionDate = Date.now()
-//            }
-
-
         }
+
 
     }
 
